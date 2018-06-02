@@ -3,8 +3,6 @@ from task import Task
 from actor_critic import make_actor, make_critic
 from replay import PrioritizedReplay
 
-# https://yanpanlau.github.io/2016/10/11/Torcs-Keras.html
-
 
 class Agent:
     def __init__(self, init_pose=None, init_velocities=None,
