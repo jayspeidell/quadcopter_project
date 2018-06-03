@@ -51,8 +51,8 @@ class PrioritizedReplay:
         return np.random.choice(mem_prob, size=self.batch_size, replace=True, p=probs)
 
     # todo sample weight conversion
-    def adjusted_weight(self, probs, batch_no):
-        beta = min(1, batch_no / self.beta_limit)
-
-        weights = 0
-        return weights
+    def adjusted_weight(self, probs, step_no):
+        beta = min(1, step_no / self.beta_limit)
+        probs = np.multiply(1 / probs, 1 / self.current_memory)
+        probs = np.power(probs, beta)
+        return probs

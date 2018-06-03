@@ -1,7 +1,9 @@
 import numpy as np
 from task import Task
-from actor_critic import make_actor, make_critic
+from actor_critic import Actor, Critic
 from replay import PrioritizedReplay
+import keras.backend as K
+import tensorflow as tf
 
 
 class Agent:
@@ -20,36 +22,58 @@ class Agent:
 
         self.memory = PrioritizedReplay(buffer_size, batch_size, replay_alpha)
 
-        self.actor = make_actor(self.state_size, self.action_size)
+        self.actor = Actor(self.state_size, self.action_size)
         self.actor_weights = self.actor.trainable_weights
-        self.actor_target = make_actor(self.state_size, self.action_size)
+        self.actor_target = Actor(self.state_size, self.action_size)
 
-        self.critic = make_critic(self.state_size, self.action_size)
+        self.critic = Critic(self.state_size, self.action_size)
         self.critic_weights = self.critic.trainable_weights
-        self.critic_target = make_critic(self.state_size, self.action_size)
+        self.critic_target = Critic(self.state_size, self.action_size)
 
         self.gamma = 0.1
 
+        self.training_step = 0
+
     def step(self):
-        self.act()
+        next_state = self.act()
 
         if self.memory.current_memory > self.memory.batch_size:
             self.learn()
 
 
-
+        self.state = next_state
 
     def act(self):
-        action = self.actor(self.state)
+        action = self.actor.model(self.state)
         next_state, reward, done = self.task.step(action)
-        Q = self.critic(self.state, action)
-        Q_h = self.critic(next_state, action)
-        TD = reward + self.gamma * Q_h - Q
-        value = abs(TD)
+        q = self.critic_target.model(self.state, action)
+        q_h = self.critic_target.model(next_state, action)
+        td = reward + self.gamma * q_h - q
+        value = abs(td)
         self.memory.add(self.state, action, reward, next_state, done, value)
+        return next_state
 
     def learn(self):
-        print('hi')
+        self.training_step += 1
+
+        experiences, weights = zip(*self.memory.sample())
+        weights = self.memory.adjusted_weight(weights, self.training_step)
+        states = np.array([experience.state for experience in experiences])
+        next_states = np.array([experience.next_state for experience in experiences])
+        actions = np.array([experience.action for experience in experiences])
+        rewards = np.array([experience.reward for experience in experiences])
+        dones = np.array([experience.done for experience in experiences])
+
+        next_actions = self.actor_target.model.predict_on_batch(states)
+        q_h = self.critic_target.model.predict_on_batch([next_states, next_actions])
+        q = rewards - self.gamma * q_h * ( 1-dones)
+
+        self.critic.model.train_on_batch(x=[states,actions],y=q,sample_weight=weights)
+
+        self.critic.get_
+
+
+
 
     def play(self):
         print('hi')
