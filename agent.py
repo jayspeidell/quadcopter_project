@@ -18,16 +18,16 @@ class Agent:
         self.state_size = self.task.state_size
         self.action_size = self.task.action_size
 
-        self.state = self.task.sim.reset()
+        self.state = self.task.reset()
 
         self.memory = PrioritizedReplay(buffer_size, batch_size, replay_alpha)
 
         self.actor = Actor(self.state_size, self.action_size)
-        self.actor_weights = self.actor.trainable_weights
+        self.actor_weights = self.actor.model.trainable_weights
         self.actor_target = Actor(self.state_size, self.action_size)
 
         self.critic = Critic(self.state_size, self.action_size)
-        self.critic_weights = self.critic.trainable_weights
+        self.critic_weights = self.critic.model.trainable_weights
         self.critic_target = Critic(self.state_size, self.action_size)
 
         self.gamma = 0.1
@@ -45,10 +45,10 @@ class Agent:
         self.state = next_state
 
     def act(self):
-        action = self.actor.model(self.state)
+        action = self.actor.model.predict(np.reshape(self.state, [-1, self.state_size]))
         next_state, reward, done = self.task.step(action)
-        q = self.critic_target.model(self.state, action)
-        q_h = self.critic_target.model(next_state, action)
+        q = self.critic_target.model.predict(self.state, action)
+        q_h = self.critic_target.model.predict(next_state, action)
         td = reward + self.gamma * q_h - q
         value = abs(td)
         self.memory.add(self.state, action, reward, next_state, done, value)
