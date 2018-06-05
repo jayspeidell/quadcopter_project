@@ -32,6 +32,8 @@ class Agent:
 
         self.gamma = 0.1
 
+        self.tau = 0.5
+
         self.training_step = 0
 
     def step(self):
@@ -39,7 +41,6 @@ class Agent:
 
         if self.memory.current_memory > self.memory.batch_size:
             self.learn()
-
 
         self.state = next_state
 
@@ -70,10 +71,19 @@ class Agent:
 
         self.critic.model.train_on_batch(x=[states,actions],y=q,sample_weight=weights)
 
-        self.critic.get_
+        gradients = self.critic.get_action_gradients(states, next_actions)
 
+        self.actor.train_fn(states, gradients)
 
+        self.target_update(self.actor, self.actor_target)
+        self.target_update(self.critic, self.critic_target)
 
+    def target_update(self, model, target_model):
+        local_weights = np.array(model.get_weights())
+        target_weights = np.array(target_model.get_weights())
+
+        new_weights = self.tau * local_weights + (1 - self.tau) * target_weights
+        target_model.set_weights(new_weights)
 
     def play(self):
         print('hi')
