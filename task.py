@@ -38,8 +38,8 @@ class Task():
     def step(self, rotor_speeds):
         np.clip(np.array(rotor_speeds), self.action_low, self.action_high, out=rotor_speeds)
         """Uses action to obtain next state, reward, done."""
-        reward = 0
-        pose_all = []
+        #reward = 0
+        #pose_all = []
         #for _ in range(self.action_repeat):
         done = self.sim.next_timestep(rotor_speeds) # update the sim pose and velocities
         reward = self.get_reward()
@@ -50,10 +50,10 @@ class Task():
 
     def reset(self):
         """Reset the sim to start a new episode."""
-        #self.sim.reset()
+        self.sim.reset()
         #state = np.concatenate([self.sim.pose] * self.action_repeat)
         #return state
-        return self.sim.reset()
+        return self.sim.pose
 
     def new_target(self, target_pose):
         self.target_pos = target_pose

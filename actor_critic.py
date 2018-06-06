@@ -14,7 +14,7 @@ class Actor:
     def build_actor(self, state_size, action_size):
         h1_size = 128
         h2_size = 64
-        print('Building actor...')
+
 
         states = Input(shape=[state_size], name='states')
         h1 = Dense(h1_size, activation='relu', name='hidden1')(states)
@@ -22,8 +22,7 @@ class Actor:
         # relu to make the min zero, step function in task
         # has safety to reduce high inputs to max speed
         actions = Dense(action_size, activation='relu', name='output_actions')(h2)
-        print(self.state_size, self.action_size)
-        self.model = Model(input=states, output=actions)
+        self.model = Model(inputs=states, outputs=actions)
 
         action_gradients = Input(shape=([self.action_size]), name='action_grads')
         loss = K.mean(-action_gradients * actions)
@@ -34,7 +33,6 @@ class Actor:
             outputs=[],
             updates=updates_op)
 
-        print('Actor built.')
 
 
 class Critic:
@@ -63,11 +61,9 @@ class Critic:
 
         Q = Dense(1, activation='linear')(h_4)
 
-        self.model = Model(input=[states, actions], output=Q)
+        self.model = Model(inputs=[states, actions], outputs=Q)
 
         self.model.compile(loss='mse', optimizer=Adam(lr=learning_rate))
-
-        print('Critic built.')
 
         action_gradients = K.gradients(Q, actions)
 

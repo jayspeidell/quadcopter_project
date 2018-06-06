@@ -20,10 +20,9 @@ class PrioritizedReplay:
         self.buffer_size = buffer_size
         self.batch_size = batch_size
 
-        self.experience = namedtuple('Experience', field_names=['state', 'action', 'reward', 'next_state', 'value'])
+        self.experience = namedtuple('Experience', field_names=['state', 'action', 'reward', 'next_state', 'done', 'value'])
 
     def add(self, state, action, reward, next_state, done, value):
-
         value += self.e
 
         if value <= self.min_value and len(self.memory) == self.buffer_size:
@@ -45,14 +44,17 @@ class PrioritizedReplay:
     def sample(self):
         attr = attrgetter('value')
         probs = np.array([attr(e) for e in self.memory])
-        probs = (probs ** self.a) / (sum(probs) ** self.a)
+        probs = (probs ** self.a) / (sum(probs ** self.a))
         mem_prob = [(mem, probs) for (mem, probs) in zip(self.memory, probs)]
         # returns memory and corresponding probability
-        return np.random.choice(mem_prob, size=self.batch_size, replace=True, p=probs)
+        mem_weights = [mem_prob[i] for i in np.random.choice(len(mem_prob), size=self.batch_size, replace=True, p=probs)]
+        #print(mem_weights)
+        return mem_weights
 
     # todo sample weight conversion
-    def adjusted_weight(self, probs, step_no):
+    def adjusted_weight(self, weights, step_no):
+        print('hi')
         beta = min(1, step_no / self.beta_limit)
-        probs = np.multiply(1 / probs, 1 / self.current_memory)
-        probs = np.power(probs, beta)
-        return probs
+        weights = np.multiply(1 / weights, 1 / self.current_memory)
+        weights = np.power(weights, beta)
+        return weights

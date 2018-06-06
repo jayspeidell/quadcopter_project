@@ -45,12 +45,13 @@ class Agent:
         self.state = next_state
 
     def act(self):
-        action = self.actor.model.predict(np.reshape(self.state, [-1, self.state_size]))
+        # output is 2d array, convert to 1d with [0]
+        action = self.actor.model.predict(np.reshape(self.state, [-1, self.state_size]))[0]
         next_state, reward, done = self.task.step(action)
-        q = self.critic_target.model.predict(self.state, action)
-        q_h = self.critic_target.model.predict(next_state, action)
+        q = self.critic_target.model.predict([np.reshape(self.state, [-1, self.state_size]), np.reshape(action, [-1, self.action_size])])
+        q_h = self.critic_target.model.predict([np.reshape(next_state, [-1, self.state_size]), np.reshape(action, [-1, self.action_size])])
         td = reward + self.gamma * q_h - q
-        value = abs(td)
+        value = abs(float(td[0]))
         self.memory.add(self.state, action, reward, next_state, done, value)
         return next_state
 
@@ -58,6 +59,8 @@ class Agent:
         self.training_step += 1
 
         experiences, weights = zip(*self.memory.sample())
+        experiences = list(experiences)
+        weights = np.array(weights)
         weights = self.memory.adjusted_weight(weights, self.training_step)
         states = np.array([experience.state for experience in experiences])
         next_states = np.array([experience.next_state for experience in experiences])
@@ -67,13 +70,14 @@ class Agent:
 
         next_actions = self.actor_target.model.predict_on_batch(states)
         q_h = self.critic_target.model.predict_on_batch([next_states, next_actions])
-        q = rewards - self.gamma * q_h * ( 1-dones)
+        q = np.reshape(rewards, [-1, 1]) - self.gamma * q_h #* (1-dones)
 
-        self.critic.model.train_on_batch(x=[states,actions],y=q,sample_weight=weights)
+        self.critic.model.train_on_batch(x=[states, actions], y=q, sample_weight=weights)
 
-        gradients = self.critic.get_action_gradients(states, next_actions)
+        # problem: it's a list with one item / band-aid: [0]
+        gradients = self.critic.get_action_gradients([states, next_actions])[0]
 
-        self.actor.train_fn(states, gradients)
+        self.actor.train_fn([states, gradients])
 
         self.target_update(self.actor, self.actor_target)
         self.target_update(self.critic, self.critic_target)
