@@ -1,7 +1,8 @@
 import numpy as np
 from task import Task
-from actor_critic import Actor, Critic
+from actor_critic import Actor, Critic, Noise
 from replay import PrioritizedReplay
+import sys
 import keras.backend as K
 import tensorflow as tf
 
@@ -9,8 +10,8 @@ import tensorflow as tf
 class Agent:
     def __init__(self, init_pose=None, init_velocities=None,
                  init_angle_velocities=None, runtime=5., target_pos=None,
-                 buffer_size=150000, batch_size=32, alpha=1, beta=1, gamma=0.1,
-                 replay_alpha=0.9):
+                 buffer_size=150000, batch_size=32, gamma=0.99,
+                 replay_alpha=0.9, beta_limit = 10000):
 
         self.task = Task(init_pose, init_velocities,
                          init_angle_velocities, runtime, target_pos)
@@ -20,40 +21,56 @@ class Agent:
 
         self.state = self.task.reset()
 
-        self.memory = PrioritizedReplay(buffer_size, batch_size, replay_alpha)
+        self.memory = PrioritizedReplay(buffer_size, batch_size, replay_alpha, beta_limit)
 
-        self.actor = Actor(self.state_size, self.action_size)
+        self.actor = Actor(self.state_size, self.action_size, self.task.action_low, self.task.action_high)
         self.actor_weights = self.actor.model.trainable_weights
-        self.actor_target = Actor(self.state_size, self.action_size)
+        self.actor_target = Actor(self.state_size, self.action_size, self.task.action_low, self.task.action_high)
 
         self.critic = Critic(self.state_size, self.action_size)
         self.critic_weights = self.critic.model.trainable_weights
         self.critic_target = Critic(self.state_size, self.action_size)
 
-        self.gamma = 0.1
+        self.gamma = gamma
+        self.tau = 0.01
 
-        self.tau = 0.5
+        #noise
+        self.mu = 0
+        self.theta = 0.15
+        self.sigma = 0.2
+        self.noise = Noise(self.action_size, self.mu, self.theta, self.sigma)
 
         self.training_step = 0
 
     def step(self):
-        next_state = self.act()
-
+        next_state, done = self.act()
+        loss = None
         if self.memory.current_memory > self.memory.batch_size:
-            self.learn()
+            loss = self.learn()
+
+        if self.training_step % 500 == 0 and loss:
+            print('%d step loss: %f' % (self.training_step, loss))
 
         self.state = next_state
+
+        # reset episode
+        if done:
+            self.state = self.task.reset()
+            self.noise.reset()
 
     def act(self):
         # output is 2d array, convert to 1d with [0]
         action = self.actor.model.predict(np.reshape(self.state, [-1, self.state_size]))[0]
+        action = self.noise.add_noise(action)
+        #if self.training_step % 250 == 0:
+        #    print(action)
         next_state, reward, done = self.task.step(action)
         q = self.critic_target.model.predict([np.reshape(self.state, [-1, self.state_size]), np.reshape(action, [-1, self.action_size])])
         q_h = self.critic_target.model.predict([np.reshape(next_state, [-1, self.state_size]), np.reshape(action, [-1, self.action_size])])
         td = reward + self.gamma * q_h - q
         value = abs(float(td[0]))
         self.memory.add(self.state, action, reward, next_state, done, value)
-        return next_state
+        return next_state, done
 
     def learn(self):
         self.training_step += 1
@@ -70,9 +87,9 @@ class Agent:
 
         next_actions = self.actor_target.model.predict_on_batch(states)
         q_h = self.critic_target.model.predict_on_batch([next_states, next_actions])
-        q = np.reshape(rewards, [-1, 1]) - self.gamma * q_h #* (1-dones)
+        q = np.reshape(rewards, [-1, 1]) - self.gamma * q_h * (1-np.reshape(dones, [-1, 1]))
 
-        self.critic.model.train_on_batch(x=[states, actions], y=q, sample_weight=weights)
+        loss = self.critic.model.train_on_batch(x=[states, actions], y=q, sample_weight=weights)
 
         # problem: it's a list with one item / band-aid: [0]
         gradients = self.critic.get_action_gradients([states, next_actions])[0]
@@ -82,15 +99,55 @@ class Agent:
         self.target_update(self.actor, self.actor_target)
         self.target_update(self.critic, self.critic_target)
 
+        return loss
+
     def target_update(self, model, target_model):
-        local_weights = np.array(model.get_weights())
-        target_weights = np.array(target_model.get_weights())
+        # todo can't get weights, test the quick fix you did before
+        local_weights = np.array(model.model.get_weights())
+        target_weights = np.array(target_model.model.get_weights())
 
         new_weights = self.tau * local_weights + (1 - self.tau) * target_weights
-        target_model.set_weights(new_weights)
+        target_model.model.set_weights(new_weights)
 
     def play(self):
-        print('hi')
+        step = 0
+        state = self.task.reset()
+        action = self.actor.model.predict(np.reshape(state, [-1, self.state_size]))[0]
+        done = 0
+        rewards = [0]
+        positions = [state]
+        actions = [action]
+        while not done:
+            step += 1
+            state, reward, done = self.task.step(action)
+            if done:
+                print('DONE!')
+            action = self.actor.model.predict(np.reshape(state, [-1, self.state_size]))[0]
+            rewards.append(reward)
+            positions.append(state)
+            actions.append(action)
+            if step > 5000:
+                break
+        return positions, actions, rewards
+
+    def sample_play(self, action):
+        step = 0
+        state = self.task.reset()
+
+        done = 0
+        rewards = [0]
+        positions = [state]
+        actions = [action]
+        while not done:
+            step += 1
+            state, reward, done = self.task.step(action)
+            #action = self.actor.model.predict(np.reshape(state, [-1, self.state_size]))[0]
+            rewards.append(reward)
+            positions.append(state)
+            actions.append(action)
+            if step > 5000:
+                break
+        return positions, actions, rewards
 
     def update_target(self, target):
         self.task.new_target(target)

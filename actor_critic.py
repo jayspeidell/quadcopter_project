@@ -1,13 +1,19 @@
 from keras.models import Model
-from keras.layers import Input, Dense, Add
+from keras.layers import Input, Dense, Add, Lambda
 from keras.optimizers import Adam
 import keras.backend as K
+import copy
+import numpy as np
 
 class Actor:
-    def __init__(self, state_size, action_size):
+    def __init__(self, state_size, action_size, action_low, action_high):
 
         self.state_size = state_size
         self.action_size = action_size
+
+        self.action_low = action_low
+        self.action_high = action_high
+        self.action_range = self.action_high - self.action_low
 
         self.build_actor(self.state_size, self.action_size)
 
@@ -15,13 +21,15 @@ class Actor:
         h1_size = 128
         h2_size = 64
 
-
         states = Input(shape=[state_size], name='states')
         h1 = Dense(h1_size, activation='relu', name='hidden1')(states)
         h2 = Dense(h2_size, activation='relu', name='hidden2')(h1)
         # relu to make the min zero, step function in task
         # has safety to reduce high inputs to max speed
-        actions = Dense(action_size, activation='relu', name='output_actions')(h2)
+        actions_0_1 = Dense(action_size, activation='sigmoid', name='actions_0_1')(h2)
+
+        actions = Lambda(lambda x: (x * self.action_range) + self.action_low, name='output_actions')(actions_0_1)
+
         self.model = Model(inputs=states, outputs=actions)
 
         action_gradients = Input(shape=([self.action_size]), name='action_grads')
@@ -72,6 +80,22 @@ class Critic:
             outputs=action_gradients)
 
 
+class Noise:
+    def __init__(self, size, mu, theta, sigma):
+        self.mu = mu * np.ones(size)
+        self.theta = theta
+        self.sigma = sigma
+        self.reset()
+
+    def reset(self):
+        self.state = copy.copy(self.mu)
+
+    def add_noise(self, action):
+        x = self.state
+        dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(len(x))
+        self.state = x + dx
+        action = action + self.state
+        return action
 
 
 

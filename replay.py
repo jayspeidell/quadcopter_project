@@ -7,14 +7,14 @@ class PrioritizedReplay:
     Tested, no issues.
     """
 
-    def __init__(self, buffer_size, batch_size, alpha):
+    def __init__(self, buffer_size, batch_size, alpha, beta_limit):
 
         self.memory = []
         self.current_memory = 0
         self.min_value = 9999999999
 
         self.a = alpha
-        self.beta_limit = 100000
+        self.beta_limit = beta_limit
         self.e = 0.001
 
         self.buffer_size = buffer_size
@@ -45,15 +45,15 @@ class PrioritizedReplay:
         attr = attrgetter('value')
         probs = np.array([attr(e) for e in self.memory])
         probs = (probs ** self.a) / (sum(probs ** self.a))
+        #print('XXXXXXX len probs %d' % len(probs))
+        #print(probs)
         mem_prob = [(mem, probs) for (mem, probs) in zip(self.memory, probs)]
         # returns memory and corresponding probability
         mem_weights = [mem_prob[i] for i in np.random.choice(len(mem_prob), size=self.batch_size, replace=True, p=probs)]
-        #print(mem_weights)
         return mem_weights
 
     # todo sample weight conversion
     def adjusted_weight(self, weights, step_no):
-        print('hi')
         beta = min(1, step_no / self.beta_limit)
         weights = np.multiply(1 / weights, 1 / self.current_memory)
         weights = np.power(weights, beta)
