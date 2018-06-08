@@ -23,7 +23,7 @@ class Task():
         self.init_angle_velcities = init_angle_velocities
 
         self.state_size = self.action_repeat * 6
-        self.action_low = 400
+        self.action_low = 500
         self.action_high = 900
         self.action_size = 4
 
@@ -32,7 +32,7 @@ class Task():
         # Goal
         self.target_pos = target_pos if target_pos is not None else np.array([0., 0., 10.])
 
-        self.last_pos = self.sim.pose
+        self.last_pos = np.array(self.init_pose[:3])
 
 
     def get_reward(self):
@@ -40,6 +40,9 @@ class Task():
         #return 1.-.3*(abs(self.sim.pose[:3] - self.target_pos)).sum()
         rotor_penalty = 1
         fall_penalty = 1
+
+
+
         #if np.max(self.rotor_speeds) - np.min(self.rotor_speeds) > 200:
         #    rotor = 0.5
         #print('Velocity')
@@ -49,8 +52,10 @@ class Task():
 
         delta_d = prev_distance - distance
         #print(prev_distance, distance, delta_d)
+        dd = self.sim.pose[2] - self.last_pos[2]
         self.last_pos = self.sim.pose
-        return delta_d * rotor_penalty * fall_penalty * 0.2
+        #return dd
+        return delta_d * rotor_penalty * fall_penalty
 
 
     def step(self, rotor_speeds):

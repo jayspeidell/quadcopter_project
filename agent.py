@@ -37,7 +37,7 @@ class Agent:
         #noise
         self.mu = 0
         self.theta = 0.15
-        self.sigma = 0.2
+        self.sigma = 6
         self.noise = Noise(self.action_size, self.mu, self.theta, self.sigma)
 
         self.training_step = 0
@@ -62,6 +62,7 @@ class Agent:
         # output is 2d array, convert to 1d with [0]
         action = self.actor.model.predict(np.reshape(self.state, [-1, self.state_size]))[0]
         action = self.noise.add_noise(action)
+        action = self.task.clip(action)
         #if self.training_step % 250 == 0:
         #    print(action)
         next_state, reward, done = self.task.step(action)
@@ -117,6 +118,7 @@ class Agent:
         rewards = [0]
         positions = [state]
         actions = [action]
+        velocities = [[0, 0, 0, 0]]
         while not done:
             step += 1
             state, reward, done = self.task.step(action)
@@ -126,9 +128,10 @@ class Agent:
             rewards.append(reward)
             positions.append(state)
             actions.append(action)
+            velocities.append(self.task.sim.v)
             if step > 5000:
                 break
-        return positions, actions, rewards
+        return positions, actions, rewards, velocities
 
     def sample_play(self, action):
         step = 0
@@ -138,6 +141,7 @@ class Agent:
         rewards = [0]
         positions = [state]
         actions = [action]
+        velocities = [[0,0,0,0]]
         while not done:
             step += 1
             state, reward, done = self.task.step(action)
@@ -145,9 +149,10 @@ class Agent:
             rewards.append(reward)
             positions.append(state)
             actions.append(action)
+            velocities.append(self.task.sim.v)
             if step > 5000:
                 break
-        return positions, actions, rewards
+        return positions, actions, rewards, velocities
 
     def update_target(self, target):
         self.task.new_target(target)

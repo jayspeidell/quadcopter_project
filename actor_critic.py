@@ -20,13 +20,15 @@ class Actor:
     def build_actor(self, state_size, action_size):
         h1_size = 128
         h2_size = 64
+        h3_size = 32
 
         states = Input(shape=[state_size], name='states')
         h1 = Dense(h1_size, activation='relu', name='hidden1')(states)
         h2 = Dense(h2_size, activation='relu', name='hidden2')(h1)
+        h3 = Dense(h3_size, activation='relu', name='hidden3')(h2)
         # relu to make the min zero, step function in task
         # has safety to reduce high inputs to max speed
-        actions_0_1 = Dense(action_size, activation='sigmoid', name='actions_0_1')(h2)
+        actions_0_1 = Dense(action_size, activation='sigmoid', name='actions_0_1')(h3)
 
         actions = Lambda(lambda x: (x * self.action_range) + self.action_low, name='output_actions')(actions_0_1)
 
