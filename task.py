@@ -47,7 +47,7 @@ class Task():
         distance = np.sqrt(np.sum(np.square(self.sim.pose[:3] - self.target_pos)))
         prev_distance = np.sqrt(np.sum(np.square(self.last_pos[:3] - self.target_pos)))
 
-        delta_d = distance - prev_distance
+        delta_d = prev_distance - distance
         #print(prev_distance, distance, delta_d)
         self.last_pos = self.sim.pose
         return delta_d * rotor_penalty * fall_penalty * 0.2
