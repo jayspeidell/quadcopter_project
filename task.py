@@ -27,35 +27,52 @@ class Task():
         self.action_high = 900
         self.action_size = 4
 
-        self.init_pose = init_pose if init_pose is not None else np.array([25., 25., 120., 0, 0, 0])
+        self.init_pose = np.array(init_pose if init_pose is not None else np.array([25., 25., 120., 0, 0, 0]))
 
         # Goal
-        self.target_pos = target_pos if target_pos is not None else np.array([0., 0., 10.])
+        self.target_pos = np.array(target_pos if target_pos is not None else np.array([0., 0., 10.]))
 
+        self.dist = abs(self.init_pose[:3] - self.target_pos).sum()
+        self.last_dist = self.dist
+        print('Distance: %.1f' % self.dist)
+        self.init_dist = abs(self.init_pose[:3] - self.target_pos).sum()
+        self.init_vdist = abs(self.sim.pose[2] - self.target_pos[2])
+        self.init_hdist = abs(self.sim.pose[:2] - self.target_pos[:2]).sum()
+        self.last_vdist = self.init_vdist
+        self.last_hdist = self.init_hdist
         self.last_pos = np.array(self.init_pose[:3])
+        self.speed = 0
+        self.proximity = 0
 
+        self.speed_limit = 0.1
 
     def get_reward(self):
         """Uses current pose of sim to return reward."""
-        #return 1.-.3*(abs(self.sim.pose[:3] - self.target_pos)).sum()
-        rotor_penalty = 1
-        fall_penalty = 1
 
+        self.dist = abs(self.sim.pose[:3] - self.target_pos).sum()
+        self.vdist = abs(self.sim.pose[2] - self.target_pos[2])
+        self.hdist = abs(self.sim.pose[:2] - self.target_pos[:2]).sum()
+        self.speed = abs(self.last_vdist - self.vdist)
 
+        if not self.proximity:
+            if self.vdist < 20:
+                self.proximity = 1
 
-        #if np.max(self.rotor_speeds) - np.min(self.rotor_speeds) > 200:
-        #    rotor = 0.5
-        #print('Velocity')
-        #print(self.sim.v)
-        distance = np.sqrt(np.sum(np.square(self.sim.pose[:3] - self.target_pos)))
-        prev_distance = np.sqrt(np.sum(np.square(self.last_pos[:3] - self.target_pos)))
+        proximity_bonus = 0
 
-        delta_d = prev_distance - distance
-        #print(prev_distance, distance, delta_d)
-        dd = self.sim.pose[2] - self.last_pos[2]
-        self.last_pos = self.sim.pose
-        #return dd
-        return delta_d * rotor_penalty * fall_penalty
+        speed_penalty = (1 - max(self.speed, 0.1)) ** (1 - (self.vdist / self.init_dist))
+
+        if self.vdist < 5:
+            proximity_bonus = np.sqrt((5 - self.vdist)/2 + 0.00001)
+
+        self.last_dist = self.dist
+        self.last_vdist = self.vdist
+        self.last_hdist = self.hdist
+
+        return (1 - self.vdist ** 0.4) * speed_penalty
+
+        #return 1 - self.vdist / self.init_dist
+
 
 
     def step(self, rotor_speeds):
@@ -76,8 +93,16 @@ class Task():
     def reset(self):
         """Reset the sim to start a new episode."""
         self.sim.reset()
-        #state = np.concatenate([self.sim.pose] * self.action_repeat)
-        #return state
+        self.dist = abs(self.init_pose[:3] - self.target_pos).sum()
+        self.last_dist = self.dist
+        self.init_dist = self.dist
+        self.init_vdist = abs(self.sim.pose[2] - self.target_pos[2])
+        self.init_hdist = abs(self.sim.pose[:2] - self.target_pos[:2]).sum()
+        self.last_vdist = self.init_vdist
+        self.last_hdist = self.init_hdist
+        self.last_pos = np.array(self.init_pose[:3])
+        self.speed = 0
+
         return self.sim.pose
 
     def new_target(self, target_pose):
