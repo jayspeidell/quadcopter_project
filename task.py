@@ -22,8 +22,9 @@ class Task():
         self.init_velocities = init_velocities
         self.init_angle_velcities = init_angle_velocities
 
+        # todo test higher level action space
         self.state_size = self.action_repeat * 6
-        self.action_low = 500
+        self.action_low = 400
         self.action_high = 900
         self.action_size = 4
 
@@ -58,18 +59,24 @@ class Task():
             if self.vdist < 20:
                 self.proximity = 1
 
-        proximity_bonus = 0
+        # GENTLE LANDING
+        # return 1 - (self.vdist/self.init_vdist) * 1.5
+        proximity_reward = 1 - (self.vdist/self.init_vdist) * 2
 
-        speed_penalty = (1 - max(self.speed, 0.1)) ** (1 - (self.vdist / self.init_dist))
 
-        if self.vdist < 5:
-            proximity_bonus = np.sqrt((5 - self.vdist)/2 + 0.00001)
+        speed_penalty = (1 - max(self.speed, 0.05)/1) ** (1 - (self.vdist / self.init_vdist))
+
+        if self.vdist > 20:
+            speed_penalty = 0.5
+
+        #if self.vdist < 20:
+        #    proximity_bonus = np.sqrt((5 - self.vdist)/2 + 0.00001)
 
         self.last_dist = self.dist
         self.last_vdist = self.vdist
         self.last_hdist = self.hdist
-
-        return (1 - self.vdist ** 0.4) * speed_penalty
+        #print(proximity_reward * speed_penalty)
+        return proximity_reward * speed_penalty
 
         #return 1 - self.vdist / self.init_dist
 
@@ -87,6 +94,8 @@ class Task():
         #pose_all.append(self.sim.pose)
         #next_state = np.concatenate(pose_all)
         next_state = self.sim.pose
+
+        #next_state.append(self.vdist)
 
         return next_state, reward, done
 

@@ -30,6 +30,13 @@ class PrioritizedReplay:
 
         exp = self.experience(state, action, reward, next_state, done, value)
 
+        if not reward:
+            print('error')
+            return
+
+        if not value:
+            print('error')
+            return
         if value > self.min_value and len(self.memory) == self.buffer_size:
             self.memory = sorted(self.memory, key=attrgetter('value'))
             self.memory[-1] = exp

@@ -11,7 +11,7 @@ class Agent:
     def __init__(self, init_pose=None, init_velocities=None,
                  init_angle_velocities=None, runtime=5., target_pos=None,
                  buffer_size=150000, batch_size=32, gamma=0.99,
-                 replay_alpha=0.7, beta_limit=5000):
+                 replay_alpha=0.5, beta_limit=10000):
 
         self.task = Task(init_pose, init_velocities,
                          init_angle_velocities, runtime, target_pos)
@@ -35,9 +35,13 @@ class Agent:
         self.tau = 0.01
 
         #noise
-        self.mu = 4
-        self.theta = 0.2
-        self.sigma = 7
+        # GENTLE LANDING
+        #self.mu = 0
+        #self.theta = 0.1
+        #self.sigma = 25
+        self.mu = 0
+        self.theta = 0.1
+        self.sigma = 9
         self.noise = Noise(self.action_size, self.mu, self.theta, self.sigma)
 
         self.training_step = 0
@@ -143,20 +147,24 @@ class Agent:
 
         done = 0
         rewards = [0]
+        distances = [0]
         positions = [state]
         actions = [action]
-        velocities = [[0,0,0,0]]
+        speeds = [0]
+        velocities = [[0, 0, 0, 0]]
         while not done:
             step += 1
             state, reward, done = self.task.step(action)
             #action = self.actor.model.predict(np.reshape(state, [-1, self.state_size]))[0]
+            distances.append(self.task.dist)
             rewards.append(reward)
             positions.append(state)
             actions.append(action)
+            speeds.append(self.task.speed)
             velocities.append(self.task.sim.v)
             if step > 5000:
                 break
-        return positions, actions, rewards, velocities
+        return positions, actions, rewards, distances, speeds
 
     def update_target(self, target):
         self.task.new_target(target)
