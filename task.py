@@ -16,13 +16,13 @@ class Task():
         """
         # Simulation
         self.sim = PhysicsSim(init_pose, init_velocities, init_angle_velocities, runtime) 
-        self.action_repeat = 1
+        self.action_repeat = 3
 
         self.init_pose = init_pose
         self.init_velocities = init_velocities
         self.init_angle_velcities = init_angle_velocities
 
-        # todo test higher level action space
+        
         self.state_size = self.action_repeat * 6
         self.action_low = 400
         self.action_high = 900
@@ -35,7 +35,7 @@ class Task():
 
         self.dist = abs(self.init_pose[:3] - self.target_pos).sum()
         self.last_dist = self.dist
-        print('Distance: %.1f' % self.dist)
+
         self.init_dist = abs(self.init_pose[:3] - self.target_pos).sum()
         self.init_vdist = abs(self.sim.pose[2] - self.target_pos[2])
         self.init_hdist = abs(self.sim.pose[:2] - self.target_pos[:2]).sum()
@@ -65,6 +65,7 @@ class Task():
 
 
         speed_penalty = (1 - max(self.speed, 0.05)/1) ** (1 - (self.vdist / self.init_vdist))
+
 
         if self.vdist > 20:
             speed_penalty = 0.5
@@ -111,6 +112,8 @@ class Task():
         self.last_hdist = self.init_hdist
         self.last_pos = np.array(self.init_pose[:3])
         self.speed = 0
+
+
 
         return self.sim.pose
 
