@@ -18,9 +18,9 @@ class Actor:
         self.build_actor(self.state_size, self.action_size)
 
     def build_actor(self, state_size, action_size):
-        h1_size = 128
-        h2_size = 64
-        h3_size = 32
+        h1_size = 64
+        h2_size = 32
+        h3_size = 16
 
         states = Input(shape=[state_size], name='states')
         h1 = Dense(h1_size, activation='relu', name='hidden1')(states)
@@ -54,9 +54,9 @@ class Critic:
         self.build_critic(self.state_size, self.action_size)
 
     def build_critic(self, state_size, action_size, learning_rate=0.05):
-        hl1 = 128
-        hl2 = 64
-        hl3 = 32
+        hl1 = 64
+        hl2 = 32
+        hl3 = 16
 
         states = Input(shape=[state_size])
         s_1 = Dense(hl1, activation='relu')(states)

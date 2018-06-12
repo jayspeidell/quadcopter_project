@@ -66,12 +66,12 @@ class Task():
 
         speed_penalty = (1 - max(self.speed, 0.05)/1) ** (1 - (self.vdist / self.init_vdist))
         if np.isnan(speed_penalty):
-            speed_penalty = 0
+            speed_penalty = 0.01
 
         #if self.vdist > 20:
         #    speed_penalty = 0.5
 
-        axis_adjust = 1
+        #axis_adjust = 1
         #for axis in self.sim.pose[3:]:
             #if axis > 2:
                 #axis_adjust = 0.5 / axis

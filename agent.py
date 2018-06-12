@@ -32,7 +32,9 @@ class Agent:
         self.critic_target = Critic(self.state_size, self.action_size)
 
         self.gamma = gamma
-        self.tau = 0.01
+
+        # how much influence older weights have when updating target
+        self.tau = 0.03
 
         #noise
         # GENTLE LANDING
@@ -44,23 +46,27 @@ class Agent:
         self.sigma = 9
         self.noise = Noise(self.action_size, self.mu, self.theta, self.sigma)
 
+        self.episodes = 0
         self.training_step = 0
 
     def step(self):
-        next_state, done = self.act()
-        loss = None
-        if self.memory.current_memory > self.memory.batch_size:
-            loss = self.learn()
+        done = 0
+        while not done:
+            next_state, done = self.act()
+            loss = None
+            if self.memory.current_memory > self.memory.batch_size:
+                loss = self.learn()
 
-        if self.training_step % 100 == 0 and loss:
-            print('%d step loss: %f' % (self.training_step, loss))
-
-        self.state = next_state
+            self.state = next_state
 
         # reset episode
-        if done:
-            self.state = self.task.reset()
-            self.noise.reset()
+        if self.training_step > 0:
+            self.episodes += 1
+        if self.episodes > 1 and self.episodes % 20 == 0 and loss:
+            print('%d episode loss: %f' % (self.episodes, loss))
+        self.state = self.task.reset()
+        self.noise.reset()
+        self.noise.reset()
 
     def act(self):
         # output is 2d array, convert to 1d with [0]
@@ -79,7 +85,6 @@ class Agent:
 
     def learn(self):
         self.training_step += 1
-
         experiences, weights = zip(*self.memory.sample())
         experiences = list(experiences)
         weights = np.array(weights)
