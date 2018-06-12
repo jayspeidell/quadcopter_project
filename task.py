@@ -23,8 +23,8 @@ class Task():
         self.init_angle_velcities = init_angle_velocities
 
 
-        self.state_size = self.action_repeat * 6
-        self.action_low = 400
+        self.state_size = self.action_repeat * 7
+        self.action_low = 0
         self.action_high = 900
         self.action_size = 4
 
@@ -68,6 +68,8 @@ class Task():
         if np.isnan(speed_penalty):
             speed_penalty = 0.01
 
+
+
         #if self.vdist > 20:
         #    speed_penalty = 0.5
 
@@ -80,7 +82,8 @@ class Task():
         self.last_vdist = self.vdist
         self.last_hdist = self.hdist
         #print(proximity_reward * speed_penalty)
-        return proximity_reward * speed_penalty #* axis_adjust
+
+        return proximity_reward * speed_penalty / self.action_repeat
 
         ''' Working Snapshot 
         proximity_reward = 1 - (self.vdist/self.init_vdist)
@@ -102,7 +105,9 @@ class Task():
         for _ in range(self.action_repeat):
             done = self.sim.next_timestep(rotor_speeds) # update the sim pose and velocities
             reward += self.get_reward()
-            pose_all.append(self.sim.pose)
+            state = list(self.sim.pose)
+            state.append(self.speed)
+            pose_all.append(state)
         next_state = np.concatenate(pose_all)
         """Uses action to obtain next state, reward, done."""
 
@@ -126,8 +131,9 @@ class Task():
         self.last_hdist = self.init_hdist
         self.last_pos = np.array(self.init_pose[:3])
         self.speed = 0
-
-        self.state = np.concatenate([self.sim.pose] * 3)
+        self.state = list(self.sim.pose)
+        self.state.append(self.speed)
+        self.state = np.concatenate([self.state] * 3)
 
         return self.state
 

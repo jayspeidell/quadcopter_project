@@ -93,10 +93,13 @@ class Noise:
         self.state = copy.copy(self.mu)
 
     def add_noise(self, action):
+        off = np.random.random(1)[0]
         x = self.state
         dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(len(x))
         self.state = x + dx
         action = action + self.state
+        if off > 0.999:
+            action *= 0
         return action
 
 

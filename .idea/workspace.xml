@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="639fda26-edab-4322-8742-89e5342bd3ac" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Quadcopter_Project.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Quadcopter_Project.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/actor_critic.py" beforeDir="false" afterPath="$PROJECT_DIR$/actor_critic.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/task.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -17,8 +19,8 @@
       <file leaf-file-name="actor_critic.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/actor_critic.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="346">
-              <caret line="58" column="16" selection-start-line="58" selection-start-column="16" selection-end-line="58" selection-end-column="16" />
+            <state relative-caret-position="496">
+              <caret line="106" lean-forward="true" selection-start-line="106" selection-end-line="106" />
               <folding>
                 <element signature="e#0#30#0" expanded="true" />
               </folding>
@@ -26,11 +28,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="task.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="task.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/task.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="241">
-              <caret line="76" column="41" lean-forward="true" selection-start-line="76" selection-start-column="41" selection-end-line="76" selection-end-column="41" />
+            <state relative-caret-position="256">
+              <caret line="25" column="48" selection-start-line="25" selection-start-column="48" selection-end-line="25" selection-end-column="48" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -38,7 +40,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="README.md" pinned="false" current-in-tab="true">
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/README.md">
           <provider selected="true" editor-type-id="text-editor">
             <state>
@@ -171,12 +173,12 @@
         <option value="$PROJECT_DIR$/old/agents/plot_reward.py" />
         <option value="$PROJECT_DIR$/replay.py" />
         <option value="$PROJECT_DIR$/replay.py" />
-        <option value="$PROJECT_DIR$/actor_critic.py" />
-        <option value="$PROJECT_DIR$/actor_critic.py" />
         <option value="$PROJECT_DIR$/agent.py" />
         <option value="$PROJECT_DIR$/agent.py" />
-        <option value="$PROJECT_DIR$/task.py" />
         <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/actor_critic.py" />
+        <option value="$PROJECT_DIR$/actor_critic.py" />
+        <option value="$PROJECT_DIR$/task.py" />
       </list>
     </option>
   </component>
@@ -485,32 +487,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/old/agents/plot_reward.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="301">
-          <caret line="34" lean-forward="true" selection-start-line="34" selection-end-line="34" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/old/task.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="211">
           <caret line="45" selection-start-line="45" selection-end-line="49" selection-end-column="45" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/actor_critic.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="346">
-          <caret line="58" column="16" selection-start-line="58" selection-start-column="16" selection-end-line="58" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#30#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -525,20 +507,40 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/task.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="241">
-          <caret line="76" column="41" lean-forward="true" selection-start-line="76" selection-start-column="41" selection-end-line="76" selection-end-column="41" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <caret column="5" selection-start-column="5" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/old/agents/plot_reward.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="301">
+          <caret line="34" lean-forward="true" selection-start-line="34" selection-end-line="34" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/actor_critic.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="496">
+          <caret line="106" lean-forward="true" selection-start-line="106" selection-end-line="106" />
+          <folding>
+            <element signature="e#0#30#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/task.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="256">
+          <caret line="25" column="48" selection-start-line="25" selection-start-column="48" selection-end-line="25" selection-end-column="48" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
