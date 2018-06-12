@@ -82,7 +82,15 @@ class Task():
         #print(proximity_reward * speed_penalty)
         return proximity_reward * speed_penalty #* axis_adjust
 
-        #return 1 - self.vdist / self.init_dist
+        ''' Working Snapshot 
+        proximity_reward = 1 - (self.vdist/self.init_vdist)
+
+        speed_penalty = (1 - max(self.speed, 0.05)/1) ** (1 - (self.vdist / self.init_vdist))
+        if np.isnan(speed_penalty):
+            speed_penalty = 0.01
+
+        return proximity_reward * speed_penalty #* axis_adjust
+'''
 
 
 
