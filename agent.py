@@ -52,7 +52,7 @@ class Agent:
         if self.memory.current_memory > self.memory.batch_size:
             loss = self.learn()
 
-        if self.training_step % 1000 == 0 and loss:
+        if self.training_step % 100 == 0 and loss:
             print('%d step loss: %f' % (self.training_step, loss))
 
         self.state = next_state

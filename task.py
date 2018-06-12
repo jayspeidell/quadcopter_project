@@ -22,7 +22,7 @@ class Task():
         self.init_velocities = init_velocities
         self.init_angle_velcities = init_angle_velocities
 
-        
+
         self.state_size = self.action_repeat * 6
         self.action_low = 400
         self.action_high = 900
@@ -61,23 +61,26 @@ class Task():
 
         # GENTLE LANDING
         # return 1 - (self.vdist/self.init_vdist) * 1.5
-        proximity_reward = 1 - (self.vdist/self.init_vdist) * 2
+        proximity_reward = 1 - (self.vdist/self.init_vdist)
 
 
         speed_penalty = (1 - max(self.speed, 0.05)/1) ** (1 - (self.vdist / self.init_vdist))
+        if np.isnan(speed_penalty):
+            speed_penalty = 0
 
+        #if self.vdist > 20:
+        #    speed_penalty = 0.5
 
-        if self.vdist > 20:
-            speed_penalty = 0.5
-
-        #if self.vdist < 20:
-        #    proximity_bonus = np.sqrt((5 - self.vdist)/2 + 0.00001)
+        axis_adjust = 1
+        #for axis in self.sim.pose[3:]:
+            #if axis > 2:
+                #axis_adjust = 0.5 / axis
 
         self.last_dist = self.dist
         self.last_vdist = self.vdist
         self.last_hdist = self.hdist
         #print(proximity_reward * speed_penalty)
-        return proximity_reward * speed_penalty
+        return proximity_reward * speed_penalty #* axis_adjust
 
         #return 1 - self.vdist / self.init_dist
 
@@ -86,15 +89,18 @@ class Task():
     def step(self, rotor_speeds):
         self.rotor_speeds = self.clip(rotor_speeds)
 
+        reward = 0
+        pose_all = []
+        for _ in range(self.action_repeat):
+            done = self.sim.next_timestep(rotor_speeds) # update the sim pose and velocities
+            reward += self.get_reward()
+            pose_all.append(self.sim.pose)
+        next_state = np.concatenate(pose_all)
         """Uses action to obtain next state, reward, done."""
-        #reward = 0
-        #pose_all = []
-        #for _ in range(self.action_repeat):
-        done = self.sim.next_timestep(self.rotor_speeds) # update the sim pose and velocities
-        reward = self.get_reward()
-        #pose_all.append(self.sim.pose)
-        #next_state = np.concatenate(pose_all)
-        next_state = self.sim.pose
+
+        #done = self.sim.next_timestep(self.rotor_speeds) # update the sim pose and velocities
+        #reward = self.get_reward()
+        #next_state = self.sim.pose
 
         #next_state.append(self.vdist)
 
@@ -113,9 +119,9 @@ class Task():
         self.last_pos = np.array(self.init_pose[:3])
         self.speed = 0
 
+        self.state = np.concatenate([self.sim.pose] * 3)
 
-
-        return self.sim.pose
+        return self.state
 
     def new_target(self, target_pose):
         self.target_pos = target_pose
